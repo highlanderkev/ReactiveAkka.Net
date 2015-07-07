@@ -32,7 +32,7 @@ URL: https://code.google.com/p/io-2012-slides
 </slide>
  -->
 <slide class="title-slide segue nobackground">
-  <aside class="gdbar"><img src="images/logo-kcura.png"></aside>
+  <img src="images/logo-kcura.png">
   <!-- The content of this hgroup is replaced programmatically through the slide_config.json. -->
   <hgroup class="auto-fadein">
     <h1 data-config-title><!-- populated from slide_config.json --></h1>
@@ -44,7 +44,7 @@ URL: https://code.google.com/p/io-2012-slides
 {% for slide in slides %}
 <slide {% if slide.class %}class="{{- slide.class -}}"{% endif %} {% if slide.image %}style="background-image: url({{- slide.image -}})"{% endif %}>
   {% if 'segue' in slide.class %}
-    <aside class="gdbar"><img src="images/bluebackground.png"></aside>
+    <aside class="gdbar"><img src="images/akkalogo.png"></aside>
     <hgroup class="auto-fadein">
       <h2>{{- slide.title -}}</h2>
       <h3>{{- slide.subtitle -}}</h3>
@@ -62,10 +62,9 @@ URL: https://code.google.com/p/io-2012-slides
 {% endfor %}
 
 <slide class="thank-you-slide segue nobackground">
-  <aside class="gdbar right"><img src="images/bluebackground.png"></aside>
+  <img src="images/logo-kcura.png">
   <article class="flexbox vleft auto-fadein">
-    <h2>&lt;Thank You!&gt;</h2>
-    <p>Important contact information goes here.</p>
+    <h2>&lt;Thank You! Questions?&gt;</h2>
   </article>
   <p class="auto-fadein" data-config-contact>
     <!-- populated from slide_config.json -->

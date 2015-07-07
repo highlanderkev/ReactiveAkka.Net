@@ -32,7 +32,7 @@ URL: https://code.google.com/p/io-2012-slides
 </slide>
  -->
 <slide class="title-slide segue nobackground">
-  <aside class="gdbar"><img src="images/logo-kcura.png"></aside>
+  <img src="images/logo-kcura.png">
   <!-- The content of this hgroup is replaced programmatically through the slide_config.json. -->
   <hgroup class="auto-fadein">
     <h1 data-config-title><!-- populated from slide_config.json --></h1>
@@ -42,16 +42,14 @@ URL: https://code.google.com/p/io-2012-slides
 </slide>
 
 
-<slide  >
+<slide class="segue dark nobackground" >
   
-    <hgroup>
-      <h2></h2>
-      <h3></h3>
+    <aside class="gdbar"><img src="images/akkalogo.png"></aside>
+    <hgroup class="auto-fadein">
+      <h2>Akka.Net</h2>
+      <h3>Reactive Programming in C#</h3>
     </hgroup>
-    <article ><hr />
-<p>title: Akka.Net - Reactive Programming in C#
-class: title-slide</p></article>
- 
+  
 </slide>
 
 <slide class="big" >
@@ -62,14 +60,15 @@ class: title-slide</p></article>
     </hgroup>
     <article ><p>Things we'll cover:</p>
 <ul class="build">
-<li>What is Reactive Programming?</li>
-<li>How does Akka.Net fit in?</li>
-<li>Actor's and the Actor System </li>
-<li>Distributed vs. Local</li>
-<li>Lifecycle Monitoring</li>
+<li>Reactive Programming</li>
+<li>Quick Concepts Overview</li>
+<li>Akka.Net</li>
+<li>Actor System</li>
+<li>Messaging System</li>
+<li>Supervision and Monitoring</li>
+<li>Referencing: Remote vs. Local</li>
 <li>Persistence</li>
 <li>Publisher/Subscriber</li>
-<li>Circuit Breaker</li>
 <li>Deployment</li>
 </ul></article>
  
@@ -81,37 +80,229 @@ class: title-slide</p></article>
       <h2>Reactive Programming</h2>
       <h3>What is it?</h3>
     </hgroup>
-    <article ><p>Things we'll cover:</p>
-<ul class="build">
-<li>What is Reactive Programming?</li>
-<li>How does Akka.Net fit in?</li>
-<li>Actor's and the Actor System </li>
-<li>Distributed vs. Local</li>
-<li>Lifecycle Monitoring</li>
-<li>Persistence</li>
-<li>Publisher/Subscriber</li>
-<li>Circuit Breaker</li>
-<li>Deployment</li>
+    <article ><p>It is NOT:</p>
+<ul>
+<li>!Imperative Programming</li>
+<li>!Object-oriented Programming</li>
+<li>!Functional Programming</li>
+</ul>
+<p>BUT:</p>
+<ul>
+<li>(Reactive &amp; Object-oriented) </li>
+<li>(Reactive &amp; Functional) </li>
+<li>(Reactive &amp; Imperative)</li>
 </ul></article>
+ 
+</slide>
+
+<slide class="big" >
+  
+    <hgroup>
+      <h2>Reactive Programming</h2>
+      <h3>Four Characteristics from Reactive Manifesto</h3>
+    </hgroup>
+    <article ><ul class="build">
+<li>Responsive: Ability to respond in a timely manner if possible</li>
+<li>Resilient: Ability to handle failure and recover</li>
+<li>Elastic: Ability to scale under varying workloads</li>
+<li>Message Driven: Ability to asychronously communicate between components</li>
+</ul>
+<p><img alt="Reactive Traits" src="images/reactive-traits.png" /></p>
+<footer class="source">source: http://www.reactivemanifesto.org/</footer></article>
+ 
+</slide>
+
+<slide class="big" >
+  
+    <hgroup>
+      <h2>Reactive Programming</h2>
+      <h3>Where does it come from?</h3>
+    </hgroup>
+    <article ><ul>
+<li>Stems from issues encountered in developing Distributed Systems</li>
+<li>Specically from synchronizing events in an ordered way across multiple processes </li>
+<li>Can be traced back to a specific paper by Leslie Lamport <a href="assets/time-clocks.pdf">paper</a></li>
+<li>Expanded to include error handling, scaling and consistency</li>
+<li>Common example from wikipedia for Reactive Programming, sort of fails to illustate idea completely</li>
+<li>So I tried to improve it a little bit.</li>
+</ul>
+<footer class="source">source: http://www.lamport.org/</footer></article>
  
 </slide>
 
 <slide  >
   
     <hgroup>
-      <h2></h2>
-      <h3></h3>
+      <h2>Quick Concepts Overview</h2>
+      <h3>Common Example from Wikipedia</h3>
     </hgroup>
-    <article ></article>
+    <article ><pre class="prettyprint" data-lang="javascript">
+//NOT Reactive
+var a = 2;
+var b = 3;
+var c = a + b;
+
+a = 6
+console.log(c); // prints/evaluates to 5, not 9
+
+//REACTIVE
+var c = function(){
+    return a + b
+}
+
+console.log(c()); // prints/evaluates to 9
+b = 7
+console.log(c()); // prints/evaluates to 13
+</pre></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Quick Concepts Overview</h2>
+      <h3>Common Example IMPROVED</h3>
+    </hgroup>
+    <article ><pre class="prettyprint" data-lang="javascript">
+//NOT Reactive
+var a = 2; // event: init a then set a = 2 
+var b = 3; // event: init b then set b = 3
+var c = a + b; // event: init c then set c = eval(2 + 3)
+
+a = 6 // event: update/set a = 6
+console.log(c);  
+
+//REACTIVE
+var c = function(){ // event: update/set c = function(scope){ return eval: scope.a + scope.b }
+    return a + b 
+}
+
+console.log(c()); // event: update/set c = eval(6 + 3)
+b = 7
+console.log(c()); // event: update/set c = eval(6 + 7)
+</pre></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Quick Concepts Overview</h2>
+      <h3>Ordering Events</h3>
+    </hgroup>
+    <article ><p>How do we order events in a distributed system? </p>
+<p>Machine 1. ---------------</p>
+<p>Machine 2. ---------------</p>
+<p>Machine 3. ---------------</p>
+<p>Totally Ordered: Events A, B, C all happen in the same sequence on each different machine.</p>
+<p>Partially Ordered: Events A, B, C have a "happen's before" relationship that ensures dependency relationship.</p>
+<blockquote>
+<p>A happens before B and B happens before C therefore A happens before C. </p>
+</blockquote>
+<p>Total Ordering is expensive and typically only show up in a single process system.</p>
+<p>Partial Ordering can be achieved with the use of logical or vector clocks that establish a casual relationship between events.</p></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Quick Concepts Overview</h2>
+      <h3>Concurrency vs. Parallelism</h3>
+    </hgroup>
+    <article ><h1>Concurrency</h1>
+<blockquote>
+<p>Two or more threads/processes are executing simulatenously, but not necessarily at the same time.</p>
+<p>A------|<strong><em>_</em></strong>__---------</p>
+<p>B      &gt;--------|<strong><em>_</em></strong>__</p>
+</blockquote>
+<h1>Parallelism</h1>
+<blockquote>
+<p>Two or more threads/processes are executing simulatenously at the same time.</p>
+<p>A -----------------</p>
+<p>B -----------------</p>
+</blockquote></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Quick Concepts Overview</h2>
+      <h3>Synchronous vs. Asynchronous, Blocking vs. Non-blocking</h3>
+    </hgroup>
+    <article ><h1>Blocking/Synchronous</h1>
+<blockquote>
+<p>The thread/process makes a call or request then stop's execution until the request returns.</p>
+</blockquote>
+<h1>Non-blocking/Asynchronous</h1>
+<blockquote>
+<p>The thread/process makes a call or request then continue's execution and possibly handles the return request at a later time.</p>
+</blockquote></article>
+ 
+</slide>
+
+<slide class="big" >
+  
+    <hgroup>
+      <h2>Quick Concepts Overview</h2>
+      <h3>Deadlock, LiveLock, Starvation</h3>
+    </hgroup>
+    <article ><p>Deadlock: </p>
+<p>Livelock: </p>
+<p>Starvation: </p></article>
+ 
+</slide>
+
+<slide class="big" >
+  
+    <hgroup>
+      <h2>Quick Concepts Overview</h2>
+      <h3>Mutable vs. Immutable and State</h3>
+    </hgroup>
+    <article ><p>Mutable:</p>
+<p>Immutable:</p>
+<p>State:</p></article>
+ 
+</slide>
+
+<slide class="big" >
+  
+    <hgroup>
+      <h2>Akka.Net</h2>
+      <h3>How does this fit?</h3>
+    </hgroup>
+    <article ><p>Akka.Net</p>
+<ul>
+<li>is a System for building distributed systems with Reactive in mind</li>
+<li>ported from original Akka framework written for JVM (Java and Scala)</li>
+<li>targets/runs on .Net framework with C# or F#</li>
+<li>built with Distributed/Remote in mind first, not local -&gt; remote  </li>
+<li>provides high-level abstration of distributed network and clustered environment</li>
+<li>Peer-to-Peer not traditional client-server model (supports Clustering with Symmetry)</li>
+<li>everything is done via Actors, messaging and is asynchonous by default</li>
+</ul>
+<footer class="source">source: http://getakka.net/</footer></article>
+ 
+</slide>
+
+<slide class="big" >
+  
+    <hgroup>
+      <h2>Actor System</h2>
+      <h3>Overview</h3>
+    </hgroup>
+    <article ><p>Actors</p>
+<h2>-</h2>
+<footer class="source">source: http://getakka.net/</footer></article>
  
 </slide>
 
 
 <slide class="thank-you-slide segue nobackground">
-  <aside class="gdbar right"><img src="images/bluebackground.png"></aside>
+  <img src="images/logo-kcura.png">
   <article class="flexbox vleft auto-fadein">
-    <h2>&lt;Thank You!&gt;</h2>
-    <p>Important contact information goes here.</p>
+    <h2>&lt;Thank You! Questions?&gt;</h2>
   </article>
   <p class="auto-fadein" data-config-contact>
     <!-- populated from slide_config.json -->

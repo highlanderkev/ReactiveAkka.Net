@@ -1,8 +1,8 @@
 var SLIDE_CONFIG = {
   // Slide settings
   settings: {
-    title: 'Akka.Net',
-    subtitle: 'Reactive Programming in C#',
+    title: 'kDisco',
+    subtitle: 'Akka.Net - Reactive Programming in C#',
     eventInfo: {
     title: 'kDisco',
     date: '07/15/2015'
@@ -24,8 +24,8 @@ var SLIDE_CONFIG = {
   presenters: [{
     name: 'Kevin Westropp',
     company: 'kCura',
-    gplus: 'http://plus.google.com/u/0/+KevinWestropp',
-    twitter: '@kevinwestropp',
+    AkkaNET: 'http://getakka.net/',
+    Akka: 'http://akka.io/',
     www: 'http://www.kevinpatrickwestropp.com',
     github: 'http://github.com/highlanderkev'
   }/*, {
