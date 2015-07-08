@@ -211,12 +211,11 @@ subtitle: Deadlock, LiveLock, Starvation
 class: big
 build_lists: true
 
-Deadlock: 
+Deadlock: a thread or process is blocked in a waiting (dead) state, usually waiting on a resource 
 
-Livelock: 
+Livelock: a thread or process is unblocked (doing other things) but still waiting on a resource to become available
 
 Starvation: 
-
 
 ---
 
@@ -225,11 +224,11 @@ subtitle: Mutable vs. Immutable and State
 class: big
 build_lists: true
 
-Mutable:
+Mutable: data that can change over it's lifespan
 
-Immutable:
+Immutable: data that remains unchanged over it's lifespan
 
-State:
+State: a unique configuration, usually as a snapshot in time 
 
 ---
 
@@ -257,8 +256,13 @@ subtitle: Overview
 Actors
 
 ![Actor Overview](actor.png)
-- 
 
+- Actors are abstrations of behavior and state
+- A bundle of code that sends and receives messages
+- Does work based off events/messages
+- Has a certain state at different times
+- Asynchronous
+- Underneath the Actor System allocates 1..N threads as needed (abstracts this away from the programmer)
 
 <footer class="source">source: http://getakka.net/</footer>
 
@@ -320,6 +324,22 @@ public class Start
     }
 }
 </pre>
+
+- But Actors must know the definition of the message.
+
+---
+
+title: Messaging
+subtitle: Message Reliability in Akka
+
+- Messages are sent asychronously
+- Message ordering between two actors is guaranteed in order
+> A1 sends M1 before M2 before M3 to A2
+> A2 receives M1 before M2 before M3 from A1
+- This is because Messages are stored in a queue (mailbox) - first-in first-out
+- Guaranteed at most once delivery (no guarantee of delivery)
+- Failure is possible, messages can be lost, mis-sent, or actors might die 
+
 ---
 
 title: Referencing Actors
@@ -327,5 +347,22 @@ subtitle: Actor System Heirarchy
 
 ![ActorPath](images/ActorPath.png)
 
+- The system is composed of layers with referencing starting at 
+- Akka.tcp://system@host:port/ (Remote) or Akka//system/ (local)
+- The Top level is the user which acts as guardian/supervisor of the entire system
+- There is always a way to get back to the top level from any actor
+- Actor Lookup can happen in many different ways
+
+<footer class="source">source: http://getakka.net/</footer>
+
 ---
 
+title: Referencing Actors
+subtitle: Actor Lookup Example
+
+<pre class="prettyprint" data-lang="csharp">
+
+
+</pre>
+
+---
