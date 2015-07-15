@@ -1,10 +1,10 @@
-title: Akka.Net
+title: Akka.NET
 subtitle: Reactive Programming in C#
 class: segue dark nobackground
 
 ---
 
-title: Akka.Net
+title: Akka.NET
 subtitle: Reactive Programming
 class: big
 build_lists: true
@@ -18,8 +18,8 @@ Things we'll cover:
 - Messaging
 - Referencing Actors
 - Supervision and Monitoring
-- Persistence
-- Publisher/Subscriber
+- Remoting
+- Clustering
 - Deployment
 
 ---
@@ -67,7 +67,7 @@ class: big
 - Can be traced back to a specific paper by Leslie Lamport [paper](assets/time-clocks.pdf)
 - Expanded to include error handling, scaling and consistency
 - Common example from wikipedia for Reactive Programming, sort of fails to illustate idea completely
-- So I tried to improve it a little bit.
+- So I tried to improve it a little bit...
 
 <footer class="source">source: http://www.lamport.org/</footer>
 
@@ -126,78 +126,80 @@ subtitle: Ordering Events
 
 How do we order events in a distributed system? 
 
-Machine 1. ---------------
+M1 ---------------
 
-Machine 2. ---------------
+M2 ---------------
 
-Machine 3. ---------------
+M3 ---------------
 
-Totally Ordered: Events A, B, C all happen in the same sequence on each different machine.
+Events: A, B, C happen on three different systems.
 
-Partially Ordered: Events A, B, C have a "happen's before" relationship that ensures dependency relationship.
+---
 
-> A happens before B and B happens before C therefore A happens before C. 
+title: Quick Concepts Overview
+subtitle: Total Ordering vs. Partial Ordering
+content_class: flexbox vcenter
 
-Total Ordering is expensive and typically only show up in a single process system.
+Total Ordering
+===
+- Events A, B, C all happen in the same sequence on each different machine.
+- Expensive and typically only shows up in a single process system.
 
-Partial Ordering can be achieved with the use of logical or vector clocks that establish a casual relationship between events.
+Partial Ordering
+===
+- Events A, B, C have a "happen's before" relationship that ensures dependency relationship.
+- Often uses logical or vector clocks that establish a causal (happens before) relationship between events.
+
+Happens Before (Causal Relationship)
+===
+- A happens before B and B happens before C therefore A happens before C. 
+- A -> B -> C
 
 ---
 
 title: Quick Concepts Overview
 subtitle: Concurrency vs. Parallelism
+content_class: flexbox vcenter
 
 Concurrency
 ===
-> Two or more threads/processes are executing simulatenously, but not necessarily at the same time.
+> Two or more threads/processes executing simulatenously but not necessarily at the same time.
 
-> A------|_________---------
-
-> B      >--------|_________
-
-Parallelism
-===
-> Two or more threads/processes are executing simulatenously at the same time.
-
-> A -----------------
-
-> B -----------------
+<img alt="concurrency" src="images/concurrentprocesses.jpg" width="500">
 
 ---
 
 title: Quick Concepts Overview
-subtitle: Synchronous vs. Asynchronous, Blocking vs. Non-blocking
+subtitle: Concurrency vs. Parallelism
+content_class: flexbox vcenter
 
-Blocking/Synchronous
+Parallelism
 ===
-> The thread/process makes a call or request then stop's execution until the request returns.
+> Two or more threads/processes executing simulatenously at the same time.
 
-Non-blocking/Asynchronous
+<img alt="parallelism" src="images/parallelprocesses.jpg" width="500">
+
+---
+
+title: Quick Concepts Overview
+subtitle: Synchronous vs. Asynchronous
+
+Synchronous
 ===
-> The thread/process makes a call or request then continue's execution and possibly handles the return request at a later time.
+> Managing code blocks between two or more executing threads/processes.
+
+Asynchronous
+===
+> Two or more threads/processes executing code blocks without need for synchronizing.
 
 <pre class="prettyprint" data-lang="javascript">
-//Blocking
-function test(){
-    var tester = test2(); // blocks until the test2 method returns the value
-    console.log(tester);
-}
-
-function test2(){
-    var count = 0;
-    for(var x = 0; x < 100; x++){
-        count += 1;
-    }
-    return count;
-}
-
-//Non-Blocking
+//Async with jQuery AJAX
 $.ajax({
-  url: "test2()",
-  data: tester
+  url: "foo.js",
+  data: bar()
 })
-.done(function() {
-  console.log(tester);
+.done(function(data) {
+  console.log(data);
 })
 .fail(function() {
     console.log("FAIL");
@@ -207,40 +209,90 @@ $.ajax({
 ---
 
 title: Quick Concepts Overview
-subtitle: Deadlock, LiveLock, Starvation
+subtitle: Blocking vs. Non-blocking
+
+Blocking
+===
+> One thread/process can possibly block (halt) the execution of another thread/process. 
+
+Non-blocking
+===
+> The thread/process makes a call or request then continue's execution and possibly handles the return request at a later time.
+
+<pre class="prettyprint" data-lang="javascript">
+//Blocking
+function foo(){
+    var foobar = bar(); // blocks until the bar method returns the value of count
+    console.log(foobar);
+}
+function foo(){
+    var count = 0;
+    for(var x = 0; x < 100; x++){ count += 1; }
+    return count;
+}
+</pre>
+
+---
+
+title: Quick Concepts Overview
+subtitle: Deadlock vs. LiveLock
 class: big
-build_lists: true
 
-Deadlock: a thread or process is blocked in a waiting (dead) state, usually waiting on a resource 
+Deadlock
+===
+> A thread or process is blocked in a waiting (dead) state, usually waiting on a resource 
 
-Livelock: a thread or process is unblocked (doing other things) but still waiting on a resource to become available
+Livelock
+===
+> A thread or process is unblocked (doing other things) but still waiting on a resource to become available
 
-Starvation: 
+<pre class="prettyprint" data-lang="c#">
+
+
+</pre>
 
 ---
 
 title: Quick Concepts Overview
 subtitle: Mutable vs. Immutable and State
 class: big
-build_lists: true
 
-Mutable: data that can change over it's lifespan
+Mutable
+===
+> Data that can change over it's lifespan
 
-Immutable: data that remains unchanged over it's lifespan
+Immutable
+===
+> Data that remains unchanged over it's lifespan
 
-State: a unique configuration, usually as a snapshot in time 
+State
+===
+> A unique configuration, usually as a snapshot in time 
+
+<pre class="prettyprint" data-lang="c#">
+class Foo{
+    const int bar = 1; //Immutable
+    int foobar = 1; //Mutable
+}
+class Program{
+    void main(){
+        var myFoo = new Foo(); //State snapshot myFoo(bar = 1, foobar = 1)
+        myFoo.foobar = 3; //State snapshot myFoo(bar = 1, foobar = 3)
+    }
+}
+</pre>
 
 ---
 
-title: Akka.Net
+title: Akka.NET
 subtitle: How does this fit?
 class: big
 
-Akka.Net
+Akka.NET
 
 - is a System for building distributed systems with Reactive in mind
 - ported from original Akka framework written for JVM (Java and Scala)
-- targets/runs on .Net framework with C# or F#
+- targets/runs on .NET framework with C# or F#
 - built with Distributed/Remote in mind first, not local -> remote  
 - provides high-level abstration of distributed network and clustered environment
 - Peer-to-Peer not traditional client-server model (supports Clustering with Symmetry)
@@ -251,11 +303,7 @@ Akka.Net
 ---
 
 title: Actor System
-subtitle: Overview
-
-Actors
-
-![Actor Overview](actor.png)
+subtitle: What are Actors?
 
 - Actors are abstrations of behavior and state
 - A bundle of code that sends and receives messages
@@ -269,36 +317,34 @@ Actors
 ---
 
 title: Actor System
+subtitle: Overview
+
+<img src="images/actor.png" alt="Actor Overview" >
+
+<footer class="source">source: http://getakka.net/</footer>
+
+---
+
+title: Actor System
 subtitle: Hello World Example
 
-<pre class="prettyprint" data-lang="csharp">
-// Class Greet - is the Immutable Message that we pass.
-public class Greet
-{
-    public Greet(string who){
-        Who = who;
-    }
-    public string Who { get; private set; }
-}
-// Class GreetingActor extends the ReceiveActor 
-// and handles what happens when the message is passed to it 
-public class GreetingActor : ReceiveActor
-{
+<pre class="prettyprint" data-lang="C#">
+// An Actor extends the ReceiveActor 
+public class GreetingActor : ReceiveActor {
     public GreetingActor(){
-        Receive<Greet>(greet => Console.WriteLine("Hello {0}", greet.Who));
+        Receive&lt;Greet&gt;(greet => Console.WriteLine("Hello {0}", greet.Who));
     }
 }
-// Our Program creates an Actor System which handles sending the messages to the actors
-// Not necessary though, Actors can talk to other Actors
-public class Program
-{
-    public void Main(string[] args)
-    {
-        var system = ActorSystem.Create("MySystem");
-            
-        var greeter = system.ActorOf<GreetingActor>("greeter");
-            
-        greeter.Tell(new Greet("World!"));
+// Or extends UnTypedActor
+public class GreetingActor : TypedActor {
+    protected override void OnReceive(Greet greet){
+        Console.WriteLine("Hello {0}", greet.Who);
+    }
+}
+// Or extends TypedActor and Implements IHandle &lt;Message&gt;
+public class GreetingActor : TypedActor, IHandle &lt;Greet&gt; {
+    void Handle(Greet greet){
+        Console.WriteLine("Hello {0}", greet.Who);
     }
 }
 </pre>
@@ -307,7 +353,7 @@ public class Program
 title: Messaging
 subtitle: PingPong Example
 
-<pre class="prettyprint" data-lang="csharp">
+<pre class="prettyprint" data-lang="C#">
 // Messages can be any type of object, like a class with a method
 public class Ping
 {
@@ -325,8 +371,6 @@ public class Start
 }
 </pre>
 
-- But Actors must know the definition of the message.
-
 ---
 
 title: Messaging
@@ -334,8 +378,8 @@ subtitle: Message Reliability in Akka
 
 - Messages are sent asychronously
 - Message ordering between two actors is guaranteed in order
-> A1 sends M1 before M2 before M3 to A2
-> A2 receives M1 before M2 before M3 from A1
+    - A1 sends M1 before M2 before M3 to A2
+    - A2 receives M1 before M2 before M3 from A1
 - This is because Messages are stored in a queue (mailbox) - first-in first-out
 - Guaranteed at most once delivery (no guarantee of delivery)
 - Failure is possible, messages can be lost, mis-sent, or actors might die 
@@ -347,22 +391,185 @@ subtitle: Actor System Heirarchy
 
 ![ActorPath](images/ActorPath.png)
 
-- The system is composed of layers with referencing starting at 
-- Akka.tcp://system@host:port/ (Remote) or Akka//system/ (local)
-- The Top level is the user which acts as guardian/supervisor of the entire system
-- There is always a way to get back to the top level from any actor
-- Actor Lookup can happen in many different ways
+---
+
+title: Referencing Actors
+subtitle: Actor Lookup Example
+
+- The system is composed of layers with referencing starting at:
+    - Akka.tcp://system@host:port/ (Remote) 
+    - Akka//system/ (local)
+- The Top level is the user which acts as guardian/supervisor of the entire system 
+    - So always a way to get back to top level from any actor
+
+<pre class="prettyprint" data-lang="C#">
+// We can lookup actors via the ActorSelection() method
+Context.ActorSelection("/user/" + query.Name).Tell(new Hello());
+
+// Or we can use an IActorRef to send a message to an actor directly.
+IActorRef actorlookup = system.ActorOf<ActorLookup>("actorlookup");
+actorlookup.Tell(new Query(input));
+</pre>
 
 <footer class="source">source: http://getakka.net/</footer>
 
 ---
 
 title: Referencing Actors
-subtitle: Actor Lookup Example
+subtitle: DeadLetters
 
-<pre class="prettyprint" data-lang="csharp">
+- DeadLetters is a system (synthetic) actor created by Akka for messages that can't be delievered
+- /deadLetters is not a guaranteed delivery mechanism
+- If any undeliverable messages that the system is aware of, deadLetters will show up
+- Many used as a debugging mechanism, not as a production fall back
 
+---
+
+title: Supervision and Monitoring
+subtitle: DeathWatch Example
+
+<pre class="prettyprint" data-lang="C#">
+//
+</pre>
+
+---
+
+title: Supervision and Monitoring
+subtitle: Lifecycle of an Actor
+
+![ActorLifecycle](images/actor_lifecycle.png)
+
+- every actor has 5 stages of life 
+    - 1. Starting 
+    - 2. Receiving
+    - 3. Stopping
+    - 4. Terminated
+    - 5. Restarting
+
+- every actor has hook methods to define code
+    - preStart() - gets run before Receiving
+    - preRestart() - gets run before Restarting
+    - postStop() - gets run after Stopping and before Restarting
+    - postRestart() - gets run after Restarting and before Start
+
+---
+
+title: Remoting
+subtitle: Actor Lookup Distributed Example
+
+<pre class="prettyprint" data-lang="C#">
+//
+</pre>
+
+---
+
+title: Remoting
+subtitle: Configuration
+
+- Configuration in Akka uses the HOCON (Human-Optimized Config Object Notation) format
+- It is a superset of JSON with key value pairs. 
+
+<pre class="prettyprint" data-lang="HOCON">
+akka {
+	loglevel = DEBUG
+    actor {
+        provider = ""Akka.Remote.RemoteActorRefProvider, Akka.remote""
+    }
+    remote {
+		helios.tcp {
+			transport-class = ""Akka.Remote.Transport.Helios.HeliosTcpTransport, Akka.Remote""
+			transport-protocol = tcp
+            port = 8090
+            hostname = localhost
+		}
+    }
+}
+</pre>
+
+<footer class="source">source: http://getakka.net/docs/concepts/hocon</footer>
+
+---
+
+title: Clustering
+subtitle: MapReduce Example
+
+
+
+---
+
+title: Clustering
+subtitle: Using RoundRobin
+
+
+
+---
+
+title: Deployment
+subtitle: Deployment Options
+
+- Console Application (see examples)
+
+- ASP.NET
+
+<pre class="prettyprint" data-lang="C#">
+public class MvcApplication : System.Web.HttpApplication
+{
+    protected static ActorSystem ActorSystem;
+
+    protected void Application_Start(){
+    
+        ActorSystem = ActorSystem.Create("app");
+    }
+}
+</pre>
+
+---
+
+title: Deployment
+subtitle: Deployment Options
+
+- Windows Service using TopShelf
+
+<pre class="prettyprint" data-lang="C#">
 
 </pre>
+
+- Azure
+
+
+---
+
+title: Akka.NET vs. TPL Dataflow or Async/Await
+subtitle: When to consider Akka.NET
+
+When you need
+- to communicate between two remote systems in an asynchonous manner
+- expect failures and need to monitor (supervise) work
+- stateful components capable of updating state based off events from another component
+- clustering with a master-slave configuration (supervisor-worker)
+
+When to consider others: TPL Dataflow or Async/Await
+- basically anything that is not going to be distributed
+- need asyc functionality but not in a distributed manner
+- need high degree of parallelism but not in a distributed manner
+- need message passing functionality but not in a distributed manner
+
+---
+
+title: Things Not Covered
+subtitle: But Still Relevant for further investigation
+
+- Persistence
+- I/O
+- Serialization
+- Publisher/Subscriber with EventBus
+- Logging
+- Scheduler
+- Preventing Cascading Failures with Circuit Breaker
+- Dispatchers
+- Dependency Injection
+- Stashing Messages
+- Switching State/Behavior
+- Akka.NET with F#
 
 ---

@@ -46,7 +46,7 @@ URL: https://code.google.com/p/io-2012-slides
   
     <aside class="gdbar"><img src="images/akkalogo.png"></aside>
     <hgroup class="auto-fadein">
-      <h2>Akka.Net</h2>
+      <h2>Akka.NET</h2>
       <h3>Reactive Programming in C#</h3>
     </hgroup>
   
@@ -55,7 +55,7 @@ URL: https://code.google.com/p/io-2012-slides
 <slide class="big" >
   
     <hgroup>
-      <h2>Akka.Net</h2>
+      <h2>Akka.NET</h2>
       <h3>Reactive Programming</h3>
     </hgroup>
     <article ><p>Things we'll cover:</p>
@@ -64,11 +64,11 @@ URL: https://code.google.com/p/io-2012-slides
 <li>Quick Concepts Overview</li>
 <li>Akka.Net</li>
 <li>Actor System</li>
-<li>Messaging System</li>
+<li>Messaging</li>
+<li>Referencing Actors</li>
 <li>Supervision and Monitoring</li>
-<li>Referencing: Remote vs. Local</li>
-<li>Persistence</li>
-<li>Publisher/Subscriber</li>
+<li>Remoting</li>
+<li>Clustering</li>
 <li>Deployment</li>
 </ul></article>
  
@@ -124,7 +124,7 @@ URL: https://code.google.com/p/io-2012-slides
 <li>Can be traced back to a specific paper by Leslie Lamport <a href="assets/time-clocks.pdf">paper</a></li>
 <li>Expanded to include error handling, scaling and consistency</li>
 <li>Common example from wikipedia for Reactive Programming, sort of fails to illustate idea completely</li>
-<li>So I tried to improve it a little bit.</li>
+<li>So I tried to improve it a little bit...</li>
 </ul>
 <footer class="source">source: http://www.lamport.org/</footer></article>
  
@@ -191,16 +191,34 @@ console.log(c()); // event: update/set c = eval(6 + 7)
       <h3>Ordering Events</h3>
     </hgroup>
     <article ><p>How do we order events in a distributed system? </p>
-<p>Machine 1. ---------------</p>
-<p>Machine 2. ---------------</p>
-<p>Machine 3. ---------------</p>
-<p>Totally Ordered: Events A, B, C all happen in the same sequence on each different machine.</p>
-<p>Partially Ordered: Events A, B, C have a "happen's before" relationship that ensures dependency relationship.</p>
-<blockquote>
-<p>A happens before B and B happens before C therefore A happens before C. </p>
-</blockquote>
-<p>Total Ordering is expensive and typically only show up in a single process system.</p>
-<p>Partial Ordering can be achieved with the use of logical or vector clocks that establish a casual relationship between events.</p></article>
+<p>M1 ---------------</p>
+<p>M2 ---------------</p>
+<p>M3 ---------------</p>
+<p>Events: A, B, C happen on three different systems.</p></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Quick Concepts Overview</h2>
+      <h3>Total Ordering vs. Partial Ordering</h3>
+    </hgroup>
+    <article class="flexbox vcenter"><h1>Total Ordering</h1>
+<ul>
+<li>Events A, B, C all happen in the same sequence on each different machine.</li>
+<li>Expensive and typically only shows up in a single process system.</li>
+</ul>
+<h1>Partial Ordering</h1>
+<ul>
+<li>Events A, B, C have a "happen's before" relationship that ensures dependency relationship.</li>
+<li>Often uses logical or vector clocks that establish a causal (happens before) relationship between events.</li>
+</ul>
+<h1>Happens Before (Causal Relationship)</h1>
+<ul>
+<li>A happens before B and B happens before C therefore A happens before C. </li>
+<li>A -&gt; B -&gt; C</li>
+</ul></article>
  
 </slide>
 
@@ -210,18 +228,11 @@ console.log(c()); // event: update/set c = eval(6 + 7)
       <h2>Quick Concepts Overview</h2>
       <h3>Concurrency vs. Parallelism</h3>
     </hgroup>
-    <article ><h1>Concurrency</h1>
+    <article class="flexbox vcenter"><h1>Concurrency</h1>
 <blockquote>
-<p>Two or more threads/processes are executing simulatenously, but not necessarily at the same time.</p>
-<p>A------|<strong><em>_</em></strong>__---------</p>
-<p>B      &gt;--------|<strong><em>_</em></strong>__</p>
+<p>Two or more threads/processes executing simulatenously but not necessarily at the same time.</p>
 </blockquote>
-<h1>Parallelism</h1>
-<blockquote>
-<p>Two or more threads/processes are executing simulatenously at the same time.</p>
-<p>A -----------------</p>
-<p>B -----------------</p>
-</blockquote></article>
+<p><img alt="concurrency" src="images/concurrentprocesses.jpg" width="500"></p></article>
  
 </slide>
 
@@ -229,16 +240,72 @@ console.log(c()); // event: update/set c = eval(6 + 7)
   
     <hgroup>
       <h2>Quick Concepts Overview</h2>
-      <h3>Synchronous vs. Asynchronous, Blocking vs. Non-blocking</h3>
+      <h3>Concurrency vs. Parallelism</h3>
     </hgroup>
-    <article ><h1>Blocking/Synchronous</h1>
+    <article class="flexbox vcenter"><h1>Parallelism</h1>
 <blockquote>
-<p>The thread/process makes a call or request then stop's execution until the request returns.</p>
+<p>Two or more threads/processes executing simulatenously at the same time.</p>
 </blockquote>
-<h1>Non-blocking/Asynchronous</h1>
+<p><img alt="parallelism" src="images/parallelprocesses.jpg" width="500"></p></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Quick Concepts Overview</h2>
+      <h3>Synchronous vs. Asynchronous</h3>
+    </hgroup>
+    <article ><h1>Synchronous</h1>
+<blockquote>
+<p>Managing code blocks between two or more executing threads/processes.</p>
+</blockquote>
+<h1>Asynchronous</h1>
+<blockquote>
+<p>Two or more threads/processes executing code blocks without need for synchronizing.</p>
+</blockquote>
+<pre class="prettyprint" data-lang="javascript">
+//Async with jQuery AJAX
+$.ajax({
+  url: "foo.js",
+  data: bar()
+})
+.done(function(data) {
+  console.log(data);
+})
+.fail(function() {
+    console.log("FAIL");
+});
+</pre></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Quick Concepts Overview</h2>
+      <h3>Blocking vs. Non-blocking</h3>
+    </hgroup>
+    <article ><h1>Blocking</h1>
+<blockquote>
+<p>One thread/process can possibly block (halt) the execution of another thread/process. </p>
+</blockquote>
+<h1>Non-blocking</h1>
 <blockquote>
 <p>The thread/process makes a call or request then continue's execution and possibly handles the return request at a later time.</p>
-</blockquote></article>
+</blockquote>
+<pre class="prettyprint" data-lang="javascript">
+//Blocking
+function foo(){
+    var foobar = bar(); // blocks until the bar method returns the value of count
+    console.log(foobar);
+}
+function foo(){
+    var count = 0;
+    for(var x = 0; x < 100; x++){ count += 1; }
+    return count;
+}
+</pre></article>
  
 </slide>
 
@@ -246,11 +313,19 @@ console.log(c()); // event: update/set c = eval(6 + 7)
   
     <hgroup>
       <h2>Quick Concepts Overview</h2>
-      <h3>Deadlock, LiveLock, Starvation</h3>
+      <h3>Deadlock vs. LiveLock</h3>
     </hgroup>
-    <article ><p>Deadlock: </p>
-<p>Livelock: </p>
-<p>Starvation: </p></article>
+    <article ><h1>Deadlock</h1>
+<blockquote>
+<p>A thread or process is blocked in a waiting (dead) state, usually waiting on a resource </p>
+</blockquote>
+<h1>Livelock</h1>
+<blockquote>
+<p>A thread or process is unblocked (doing other things) but still waiting on a resource to become available</p>
+</blockquote>
+<pre class="prettyprint" data-lang="c#">
+
+</pre></article>
  
 </slide>
 
@@ -260,23 +335,44 @@ console.log(c()); // event: update/set c = eval(6 + 7)
       <h2>Quick Concepts Overview</h2>
       <h3>Mutable vs. Immutable and State</h3>
     </hgroup>
-    <article ><p>Mutable:</p>
-<p>Immutable:</p>
-<p>State:</p></article>
+    <article ><h1>Mutable</h1>
+<blockquote>
+<p>Data that can change over it's lifespan</p>
+</blockquote>
+<h1>Immutable</h1>
+<blockquote>
+<p>Data that remains unchanged over it's lifespan</p>
+</blockquote>
+<h1>State</h1>
+<blockquote>
+<p>A unique configuration, usually as a snapshot in time </p>
+</blockquote>
+<pre class="prettyprint" data-lang="c#">
+class Foo{
+    const int bar = 1; //Immutable
+    int foobar = 1; //Mutable
+}
+class Program{
+    void main(){
+        var myFoo = new Foo(); //State snapshot myFoo(bar = 1, foobar = 1)
+        myFoo.foobar = 3; //State snapshot myFoo(bar = 1, foobar = 3)
+    }
+}
+</pre></article>
  
 </slide>
 
 <slide class="big" >
   
     <hgroup>
-      <h2>Akka.Net</h2>
+      <h2>Akka.NET</h2>
       <h3>How does this fit?</h3>
     </hgroup>
-    <article ><p>Akka.Net</p>
+    <article ><p>Akka.NET</p>
 <ul>
 <li>is a System for building distributed systems with Reactive in mind</li>
 <li>ported from original Akka framework written for JVM (Java and Scala)</li>
-<li>targets/runs on .Net framework with C# or F#</li>
+<li>targets/runs on .NET framework with C# or F#</li>
 <li>built with Distributed/Remote in mind first, not local -&gt; remote  </li>
 <li>provides high-level abstration of distributed network and clustered environment</li>
 <li>Peer-to-Peer not traditional client-server model (supports Clustering with Symmetry)</li>
@@ -286,15 +382,378 @@ console.log(c()); // event: update/set c = eval(6 + 7)
  
 </slide>
 
-<slide class="big" >
+<slide  >
+  
+    <hgroup>
+      <h2>Actor System</h2>
+      <h3>What are Actors?</h3>
+    </hgroup>
+    <article ><ul>
+<li>Actors are abstrations of behavior and state</li>
+<li>A bundle of code that sends and receives messages</li>
+<li>Does work based off events/messages</li>
+<li>Has a certain state at different times</li>
+<li>Asynchronous</li>
+<li>Underneath the Actor System allocates 1..N threads as needed (abstracts this away from the programmer)</li>
+</ul>
+<footer class="source">source: http://getakka.net/</footer></article>
+ 
+</slide>
+
+<slide  >
   
     <hgroup>
       <h2>Actor System</h2>
       <h3>Overview</h3>
     </hgroup>
-    <article ><p>Actors</p>
-<h2>-</h2>
+    <article ><p><img src="images/actor.png" alt="Actor Overview" ></p>
 <footer class="source">source: http://getakka.net/</footer></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Actor System</h2>
+      <h3>Hello World Example</h3>
+    </hgroup>
+    <article ><pre class="prettyprint" data-lang="C#">
+// An Actor extends the ReceiveActor 
+public class GreetingActor : ReceiveActor {
+    public GreetingActor(){
+        Receive&lt;Greet&gt;(greet => Console.WriteLine("Hello {0}", greet.Who));
+    }
+}
+// Or extends UnTypedActor
+public class GreetingActor : TypedActor {
+    protected override void OnReceive(Greet greet){
+        Console.WriteLine("Hello {0}", greet.Who);
+    }
+}
+// Or extends TypedActor and Implements IHandle <Message> 
+public class GreetingActor : TypedActor, IHandle <Greet> {
+    void Handle(Greet greet){
+        Console.WriteLine("Hello {0}", greet.Who);
+    }
+}
+</pre></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Messaging</h2>
+      <h3>PingPong Example</h3>
+    </hgroup>
+    <article ><pre class="prettyprint" data-lang="C#">
+// Messages can be any type of object, like a class with a method
+public class Ping
+{
+    public string toString(){
+        return "Ping!";
+    }
+}
+// Or a class which has an immutable reference to another Actor instance
+public class Start
+{
+    public IActorRef Actor { get; private set; }
+    public Start(IActorRef actor){
+        Actor = actor;
+    }
+}
+</pre></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Messaging</h2>
+      <h3>Message Reliability in Akka</h3>
+    </hgroup>
+    <article ><ul>
+<li>Messages are sent asychronously</li>
+<li>Message ordering between two actors is guaranteed in order<ul>
+<li>A1 sends M1 before M2 before M3 to A2</li>
+<li>A2 receives M1 before M2 before M3 from A1</li>
+</ul>
+</li>
+<li>This is because Messages are stored in a queue (mailbox) - first-in first-out</li>
+<li>Guaranteed at most once delivery (no guarantee of delivery)</li>
+<li>Failure is possible, messages can be lost, mis-sent, or actors might die </li>
+</ul></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Referencing Actors</h2>
+      <h3>Actor System Heirarchy</h3>
+    </hgroup>
+    <article ><p><img alt="ActorPath" src="images/ActorPath.png" /></p></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Referencing Actors</h2>
+      <h3>Actor Lookup Example</h3>
+    </hgroup>
+    <article ><ul>
+<li>The system is composed of layers with referencing starting at:<ul>
+<li>Akka.tcp://system@host:port/ (Remote) </li>
+<li>Akka//system/ (local)</li>
+</ul>
+</li>
+<li>The Top level is the user which acts as guardian/supervisor of the entire system <ul>
+<li>So always a way to get back to top level from any actor</li>
+</ul>
+</li>
+</ul>
+<pre class="prettyprint" data-lang="C#">
+// We can lookup actors via the ActorSelection() method
+Context.ActorSelection("/user/" + query.Name).Tell(new Hello());
+
+// Or we can use an IActorRef to send a message to an actor directly.
+IActorRef actorlookup = system.ActorOf<ActorLookup>("actorlookup");
+actorlookup.Tell(new Query(input));
+</pre>
+
+<footer class="source">source: http://getakka.net/</footer></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Referencing Actors</h2>
+      <h3>DeadLetters</h3>
+    </hgroup>
+    <article ><ul>
+<li>DeadLetters is a system (synthetic) actor created by Akka for messages that can't be delievered</li>
+<li>/deadLetters is not a guaranteed delivery mechanism</li>
+<li>If any undeliverable messages that the system is aware of, deadLetters will show up</li>
+<li>Many used as a debugging mechanism, not as a production fall back</li>
+</ul></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Supervision and Monitoring</h2>
+      <h3>DeathWatch Example</h3>
+    </hgroup>
+    <article ><pre class="prettyprint" data-lang="C#">
+//
+</pre></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Supervision and Monitoring</h2>
+      <h3>Lifecycle of an Actor</h3>
+    </hgroup>
+    <article ><p><img alt="ActorLifecycle" src="images/actor_lifecycle.png" /></p>
+<ul>
+<li>
+<p>every actor has 5 stages of life </p>
+<ul>
+<li>
+<ol>
+<li>Starting </li>
+</ol>
+</li>
+<li>
+<ol>
+<li>Receiving</li>
+</ol>
+</li>
+<li>
+<ol>
+<li>Stopping</li>
+</ol>
+</li>
+<li>
+<ol>
+<li>Terminated</li>
+</ol>
+</li>
+<li>
+<ol>
+<li>Restarting</li>
+</ol>
+</li>
+</ul>
+</li>
+<li>
+<p>every actor has hook methods to define code</p>
+<ul>
+<li>preStart() - gets run before Receiving</li>
+<li>preRestart() - gets run before Restarting</li>
+<li>postStop() - gets run after Stopping and before Restarting</li>
+<li>postRestart() - gets run after Restarting and before Start</li>
+</ul>
+</li>
+</ul></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Remoting</h2>
+      <h3>Actor Lookup Distributed Example</h3>
+    </hgroup>
+    <article ><pre class="prettyprint" data-lang="C#">
+//
+</pre></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Remoting</h2>
+      <h3>Configuration</h3>
+    </hgroup>
+    <article ><ul>
+<li>Configuration in Akka uses the HOCON (Human-Optimized Config Object Notation) format</li>
+<li>It is a superset of JSON with key value pairs. </li>
+</ul>
+<pre class="prettyprint" data-lang="HOCON">
+akka {
+    loglevel = DEBUG
+    actor {
+        provider = ""Akka.Remote.RemoteActorRefProvider, Akka.remote""
+    }
+    remote {
+        helios.tcp {
+            transport-class = ""Akka.Remote.Transport.Helios.HeliosTcpTransport, Akka.Remote""
+            transport-protocol = tcp
+            port = 8090
+            hostname = localhost
+        }
+    }
+}
+</pre>
+
+<footer class="source">source: http://getakka.net/docs/concepts/hocon</footer></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Clustering</h2>
+      <h3>MapReduce Example</h3>
+    </hgroup>
+    <article ></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Clustering</h2>
+      <h3>Using RoundRobin</h3>
+    </hgroup>
+    <article ></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Deployment</h2>
+      <h3>Deployment Options</h3>
+    </hgroup>
+    <article ><ul>
+<li>
+<p>Console Application (see examples)</p>
+</li>
+<li>
+<p>ASP.NET</p>
+</li>
+</ul>
+<pre class="prettyprint" data-lang="C#">
+public class MvcApplication : System.Web.HttpApplication
+{
+    protected static ActorSystem ActorSystem;
+
+    protected void Application_Start(){
+
+        ActorSystem = ActorSystem.Create("app");
+    }
+}
+</pre></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Deployment</h2>
+      <h3>Deployment Options</h3>
+    </hgroup>
+    <article ><ul>
+<li>Windows Service using TopShelf</li>
+</ul>
+<pre class="prettyprint" data-lang="C#">
+
+</pre>
+
+<ul>
+<li>Azure</li>
+</ul></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Akka.NET vs. TPL Dataflow or Async/Await</h2>
+      <h3>When to consider Akka.NET</h3>
+    </hgroup>
+    <article ><p>When you need
+- to communicate between two remote systems in an asynchonous manner
+- expect failures and need to monitor (supervise) work
+- stateful components capable of updating state based off events from another component
+- clustering with a master-slave configuration (supervisor-worker)</p>
+<p>When to consider others: TPL Dataflow or Async/Await
+- basically anything that is not going to be distributed
+- need asyc functionality but not in a distributed manner
+- need high degree of parallelism but not in a distributed manner
+- need message passing functionality but not in a distributed manner</p></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Things Not Covered</h2>
+      <h3>But Still Relevant for further investigation</h3>
+    </hgroup>
+    <article ><ul>
+<li>Persistence</li>
+<li>I/O</li>
+<li>Serialization</li>
+<li>Publisher/Subscriber with EventBus</li>
+<li>Logging</li>
+<li>Scheduler</li>
+<li>Preventing Cascading Failures with Circuit Breaker</li>
+<li>Dispatchers</li>
+<li>Dependency Injection</li>
+<li>Stashing Messages</li>
+<li>Switching State/Behavior</li>
+<li>Akka.NET with F#</li>
+</ul>
+<hr /></article>
  
 </slide>
 
@@ -302,10 +761,12 @@ console.log(c()); // event: update/set c = eval(6 + 7)
 <slide class="thank-you-slide segue nobackground">
   <img src="images/logo-kcura.png">
   <article class="flexbox vleft auto-fadein">
-    <h2>&lt;Thank You! Questions?&gt;</h2>
+    <h2>Thank You! Questions?</h2>
   </article>
-  <p class="auto-fadein" data-config-contact>
-    <!-- populated from slide_config.json -->
+  <p class="auto-fadein">
+    <a href="http://getakka.net/" target="_blank">Akka.NET</a><br/>
+    <a href="http://akka.io/" target="_blank">Akka</a><br/>
+    <a href="https://github.com/highlanderkev/ReactiveAkka.Net" target="_blank">Github Repo</a><br/>
   </p>
 </slide>
 

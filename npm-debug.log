@@ -1,0 +1,68 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/home/ubuntu/.nvm/v0.10.35/bin/node',
+1 verbose cli   '/home/ubuntu/.nvm/v0.10.35/bin/npm',
+1 verbose cli   'install',
+1 verbose cli   'sass' ]
+2 info using npm@1.4.28
+3 info using node@v0.10.35
+4 verbose cache add [ 'sass', null ]
+5 verbose cache add name=undefined spec="sass" args=["sass",null]
+6 verbose parsed url { protocol: null,
+6 verbose parsed url   slashes: null,
+6 verbose parsed url   auth: null,
+6 verbose parsed url   host: null,
+6 verbose parsed url   port: null,
+6 verbose parsed url   hostname: null,
+6 verbose parsed url   hash: null,
+6 verbose parsed url   search: null,
+6 verbose parsed url   query: null,
+6 verbose parsed url   pathname: 'sass',
+6 verbose parsed url   path: 'sass',
+6 verbose parsed url   href: 'sass' }
+7 silly lockFile 5d7463cd-sass sass
+8 verbose lock sass /home/ubuntu/.npm/5d7463cd-sass.lock
+9 silly lockFile 5d7463cd-sass sass
+10 silly lockFile 5d7463cd-sass sass
+11 verbose addNamed [ 'sass', '' ]
+12 verbose addNamed [ null, '*' ]
+13 silly lockFile abea0ec1-sass sass@
+14 verbose lock sass@ /home/ubuntu/.npm/abea0ec1-sass.lock
+15 silly addNameRange { name: 'sass', range: '*', hasData: false }
+16 verbose request where is /sass
+17 verbose request registry https://registry.npmjs.org/
+18 verbose request id 788de307e9137a46
+19 verbose url raw /sass
+20 verbose url resolving [ 'https://registry.npmjs.org/', './sass' ]
+21 verbose url resolved https://registry.npmjs.org/sass
+22 verbose request where is https://registry.npmjs.org/sass
+23 info trying registry request attempt 1 at 21:38:19
+24 http GET https://registry.npmjs.org/sass
+25 info retry will retry, error on last attempt: Error: connect ECONNREFUSED
+26 info trying registry request attempt 2 at 21:38:30
+27 http GET https://registry.npmjs.org/sass
+28 info retry will retry, error on last attempt: Error: connect ECONNREFUSED
+29 info trying registry request attempt 3 at 21:39:31
+30 http GET https://registry.npmjs.org/sass
+31 silly lockFile abea0ec1-sass sass@
+32 silly lockFile abea0ec1-sass sass@
+33 error Error: connect ECONNREFUSED
+33 error     at errnoException (net.js:905:11)
+33 error     at Object.afterConnect [as oncomplete] (net.js:896:19)
+33 error  { [Error: connect ECONNREFUSED]
+33 error   code: 'ECONNREFUSED',
+33 error   errno: 'ECONNREFUSED',
+33 error   syscall: 'connect' }
+34 error If you are behind a proxy, please make sure that the
+34 error 'proxy' config is set properly.  See: 'npm help config'
+35 error System Linux 3.14.13-c9
+36 error command "/home/ubuntu/.nvm/v0.10.35/bin/node" "/home/ubuntu/.nvm/v0.10.35/bin/npm" "install" "sass"
+37 error cwd /home/ubuntu/workspace
+38 error node -v v0.10.35
+39 error npm -v 1.4.28
+40 error syscall connect
+41 error code ECONNREFUSED
+42 error errno ECONNREFUSED
+43 error stack Error: connect ECONNREFUSED
+43 error stack     at errnoException (net.js:905:11)
+43 error stack     at Object.afterConnect [as oncomplete] (net.js:896:19)
+44 verbose exit [ 1, true ]

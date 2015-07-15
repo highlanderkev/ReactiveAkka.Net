@@ -5,7 +5,7 @@ var SLIDE_CONFIG = {
     subtitle: 'Akka.Net - Reactive Programming in C#',
     eventInfo: {
     title: 'kDisco',
-    date: '07/15/2015'
+    date: '07/17/2015'
     },
     useBuilds: true, // Default: true. False will turn off slide animation builds.
     usePrettify: true, // Default: true
@@ -24,17 +24,9 @@ var SLIDE_CONFIG = {
   presenters: [{
     name: 'Kevin Westropp',
     company: 'kCura',
-    AkkaNET: 'http://getakka.net/',
-    Akka: 'http://akka.io/',
-    www: 'http://www.kevinpatrickwestropp.com',
-    github: 'http://github.com/highlanderkev'
-  }/*, {
-    name: 'Second Name',
-    company: 'Job Title, Google',
-    gplus: 'http://plus.google.com/1234567890',
-    twitter: '@yourhandle',
-    www: 'http://www.you.com',
-    github: 'http://github.com/you'
-  }*/]
+    akkanet: 'http://getakka.net/',
+    akka: 'http://akka.io/',
+    github_repo: 'https://github.com/highlanderkev/ReactiveAkka.Net'
+  }]
 };
 

@@ -3,3 +3,5 @@ https://gist.github.com/staltz/868e7e9bc2a7b8c1f754
 https://medium.com/reactive-programming/what-is-reactive-programming-bc9fa7f4a7fc
 
 https://en.wikipedia.org/wiki/Reactive_programming
+
+http://scattered-thoughts.net/blog/2012/08/16/causal-ordering/
