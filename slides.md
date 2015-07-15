@@ -326,7 +326,7 @@ subtitle: Overview
 ---
 
 title: Actor System
-subtitle: Hello World Example
+subtitle: GreetingInput Example
 
 <pre class="prettyprint" data-lang="C#">
 // An Actor extends the ReceiveActor 
@@ -335,8 +335,8 @@ public class GreetingActor : ReceiveActor {
         Receive&lt;Greet&gt;(greet => Console.WriteLine("Hello {0}", greet.Who));
     }
 }
-// Or extends UnTypedActor
-public class GreetingActor : TypedActor {
+// Or extends UntypedActor
+public class GreetingActor : UntypedActor {
     protected override void OnReceive(Greet greet){
         Console.WriteLine("Hello {0}", greet.Who);
     }
@@ -348,29 +348,6 @@ public class GreetingActor : TypedActor, IHandle &lt;Greet&gt; {
     }
 }
 </pre>
----
-
-title: Messaging
-subtitle: PingPong Example
-
-<pre class="prettyprint" data-lang="C#">
-// Messages can be any type of object, like a class with a method
-public class Ping
-{
-    public string toString(){
-        return "Ping!";
-    }
-}
-// Or a class which has an immutable reference to another Actor instance
-public class Start
-{
-    public IActorRef Actor { get; private set; }
-    public Start(IActorRef actor){
-        Actor = actor;
-    }
-}
-</pre>
-
 ---
 
 title: Messaging
@@ -386,6 +363,27 @@ subtitle: Message Reliability in Akka
 
 ---
 
+title: Messaging
+subtitle: PingPong Example
+
+<pre class="prettyprint" data-lang="C#">
+// Messages can be any type of object, like a class with a method
+public class Ping {
+    public string toString(){
+        return "Ping!";
+    }
+}
+// Or a class which has an immutable reference to another Actor instance
+public class Start {
+    public IActorRef Actor { get; private set; }
+    public Start(IActorRef actor){
+        Actor = actor;
+    }
+}
+</pre>
+
+---
+
 title: Referencing Actors
 subtitle: Actor System Heirarchy
 
@@ -394,7 +392,7 @@ subtitle: Actor System Heirarchy
 ---
 
 title: Referencing Actors
-subtitle: Actor Lookup Example
+subtitle: ActorLookup Example
 
 - The system is composed of layers with referencing starting at:
     - Akka.tcp://system@host:port/ (Remote) 
@@ -426,18 +424,7 @@ subtitle: DeadLetters
 ---
 
 title: Supervision and Monitoring
-subtitle: DeathWatch Example
-
-<pre class="prettyprint" data-lang="C#">
-//
-</pre>
-
----
-
-title: Supervision and Monitoring
-subtitle: Lifecycle of an Actor
-
-![ActorLifecycle](images/actor_lifecycle.png)
+subtitle: Stages of Life for an Actor
 
 - every actor has 5 stages of life 
     - 1. Starting 
@@ -454,11 +441,23 @@ subtitle: Lifecycle of an Actor
 
 ---
 
-title: Remoting
-subtitle: Actor Lookup Distributed Example
+title: Supervision and Monitoring
+subtitle: Lifecycle of an Actor
+
+<img src="images/actor_lifecycle.png" alt="ActorLifecycle" width="500">
+
+---
+
+title: Supervision and Monitoring
+subtitle: DeathWatch Example
 
 <pre class="prettyprint" data-lang="C#">
-//
+//Parents have a specific way of handling failures of children
+
+
+
+//But any Actor can monitor any other actor
+
 </pre>
 
 ---
@@ -490,10 +489,12 @@ akka {
 
 ---
 
-title: Clustering
-subtitle: MapReduce Example
+title: Remoting
+subtitle: Actor Lookup Distributed Example
 
-
+<pre class="prettyprint" data-lang="C#">
+//
+</pre>
 
 ---
 
@@ -501,41 +502,23 @@ title: Clustering
 subtitle: Using RoundRobin
 
 
+---
+
+title: Clustering
+subtitle: MapReduce Example
 
 ---
 
 title: Deployment
-subtitle: Deployment Options
+subtitle: Deployment Options (More Info on Doc Website)
 
-- Console Application (see examples)
+- Console Application
 
 - ASP.NET
 
-<pre class="prettyprint" data-lang="C#">
-public class MvcApplication : System.Web.HttpApplication
-{
-    protected static ActorSystem ActorSystem;
-
-    protected void Application_Start(){
-    
-        ActorSystem = ActorSystem.Create("app");
-    }
-}
-</pre>
-
----
-
-title: Deployment
-subtitle: Deployment Options
-
 - Windows Service using TopShelf
 
-<pre class="prettyprint" data-lang="C#">
-
-</pre>
-
 - Azure
-
 
 ---
 
@@ -543,12 +526,14 @@ title: Akka.NET vs. TPL Dataflow or Async/Await
 subtitle: When to consider Akka.NET
 
 When you need
+===
 - to communicate between two remote systems in an asynchonous manner
 - expect failures and need to monitor (supervise) work
 - stateful components capable of updating state based off events from another component
-- clustering with a master-slave configuration (supervisor-worker)
+- clustering with a master-slave configuration (supervisor-> many workers)
 
 When to consider others: TPL Dataflow or Async/Await
+===
 - basically anything that is not going to be distributed
 - need asyc functionality but not in a distributed manner
 - need high degree of parallelism but not in a distributed manner

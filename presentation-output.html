@@ -424,42 +424,16 @@ public class GreetingActor : ReceiveActor {
         Receive&lt;Greet&gt;(greet => Console.WriteLine("Hello {0}", greet.Who));
     }
 }
-// Or extends UnTypedActor
-public class GreetingActor : TypedActor {
+// Or extends UntypedActor
+public class GreetingActor : UntypedActor {
     protected override void OnReceive(Greet greet){
         Console.WriteLine("Hello {0}", greet.Who);
     }
 }
-// Or extends TypedActor and Implements IHandle <Message> 
-public class GreetingActor : TypedActor, IHandle <Greet> {
+// Or extends TypedActor and Implements IHandle &lt;Message&gt;
+public class GreetingActor : TypedActor, IHandle &lt;Greet&gt; {
     void Handle(Greet greet){
         Console.WriteLine("Hello {0}", greet.Who);
-    }
-}
-</pre></article>
- 
-</slide>
-
-<slide  >
-  
-    <hgroup>
-      <h2>Messaging</h2>
-      <h3>PingPong Example</h3>
-    </hgroup>
-    <article ><pre class="prettyprint" data-lang="C#">
-// Messages can be any type of object, like a class with a method
-public class Ping
-{
-    public string toString(){
-        return "Ping!";
-    }
-}
-// Or a class which has an immutable reference to another Actor instance
-public class Start
-{
-    public IActorRef Actor { get; private set; }
-    public Start(IActorRef actor){
-        Actor = actor;
     }
 }
 </pre></article>
@@ -483,6 +457,30 @@ public class Start
 <li>Guaranteed at most once delivery (no guarantee of delivery)</li>
 <li>Failure is possible, messages can be lost, mis-sent, or actors might die </li>
 </ul></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Messaging</h2>
+      <h3>PingPong Example</h3>
+    </hgroup>
+    <article ><pre class="prettyprint" data-lang="C#">
+// Messages can be any type of object, like a class with a method
+public class Ping {
+    public string toString(){
+        return "Ping!";
+    }
+}
+// Or a class which has an immutable reference to another Actor instance
+public class Start {
+    public IActorRef Actor { get; private set; }
+    public Start(IActorRef actor){
+        Actor = actor;
+    }
+}
+</pre></article>
  
 </slide>
 
@@ -545,22 +543,9 @@ actorlookup.Tell(new Query(input));
   
     <hgroup>
       <h2>Supervision and Monitoring</h2>
-      <h3>DeathWatch Example</h3>
+      <h3>Stages of Life for an Actor</h3>
     </hgroup>
-    <article ><pre class="prettyprint" data-lang="C#">
-//
-</pre></article>
- 
-</slide>
-
-<slide  >
-  
-    <hgroup>
-      <h2>Supervision and Monitoring</h2>
-      <h3>Lifecycle of an Actor</h3>
-    </hgroup>
-    <article ><p><img alt="ActorLifecycle" src="images/actor_lifecycle.png" /></p>
-<ul>
+    <article ><ul>
 <li>
 <p>every actor has 5 stages of life </p>
 <ul>
@@ -607,8 +592,18 @@ actorlookup.Tell(new Query(input));
 <slide  >
   
     <hgroup>
-      <h2>Remoting</h2>
-      <h3>Actor Lookup Distributed Example</h3>
+      <h2>Supervision and Monitoring</h2>
+      <h3>Lifecycle of an Actor</h3>
+    </hgroup>
+    <article ><p><img src="images/actor_lifecycle.png" alt="ActorLifecycle" width="500"></p></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Supervision and Monitoring</h2>
+      <h3>DeathWatch Example</h3>
     </hgroup>
     <article ><pre class="prettyprint" data-lang="C#">
 //
@@ -650,10 +645,12 @@ akka {
 <slide  >
   
     <hgroup>
-      <h2>Clustering</h2>
-      <h3>MapReduce Example</h3>
+      <h2>Remoting</h2>
+      <h3>Actor Lookup Distributed Example</h3>
     </hgroup>
-    <article ></article>
+    <article ><pre class="prettyprint" data-lang="C#">
+//
+</pre></article>
  
 </slide>
 
@@ -670,28 +667,10 @@ akka {
 <slide  >
   
     <hgroup>
-      <h2>Deployment</h2>
-      <h3>Deployment Options</h3>
+      <h2>Clustering</h2>
+      <h3>MapReduce Example</h3>
     </hgroup>
-    <article ><ul>
-<li>
-<p>Console Application (see examples)</p>
-</li>
-<li>
-<p>ASP.NET</p>
-</li>
-</ul>
-<pre class="prettyprint" data-lang="C#">
-public class MvcApplication : System.Web.HttpApplication
-{
-    protected static ActorSystem ActorSystem;
-
-    protected void Application_Start(){
-
-        ActorSystem = ActorSystem.Create("app");
-    }
-}
-</pre></article>
+    <article ></article>
  
 </slide>
 
@@ -699,17 +678,21 @@ public class MvcApplication : System.Web.HttpApplication
   
     <hgroup>
       <h2>Deployment</h2>
-      <h3>Deployment Options</h3>
+      <h3>Deployment Options (More Info on Doc Website)</h3>
     </hgroup>
     <article ><ul>
-<li>Windows Service using TopShelf</li>
-</ul>
-<pre class="prettyprint" data-lang="C#">
-
-</pre>
-
-<ul>
-<li>Azure</li>
+<li>
+<p>Console Application</p>
+</li>
+<li>
+<p>ASP.NET</p>
+</li>
+<li>
+<p>Windows Service using TopShelf</p>
+</li>
+<li>
+<p>Azure</p>
+</li>
 </ul></article>
  
 </slide>
@@ -720,16 +703,20 @@ public class MvcApplication : System.Web.HttpApplication
       <h2>Akka.NET vs. TPL Dataflow or Async/Await</h2>
       <h3>When to consider Akka.NET</h3>
     </hgroup>
-    <article ><p>When you need
-- to communicate between two remote systems in an asynchonous manner
-- expect failures and need to monitor (supervise) work
-- stateful components capable of updating state based off events from another component
-- clustering with a master-slave configuration (supervisor-worker)</p>
-<p>When to consider others: TPL Dataflow or Async/Await
-- basically anything that is not going to be distributed
-- need asyc functionality but not in a distributed manner
-- need high degree of parallelism but not in a distributed manner
-- need message passing functionality but not in a distributed manner</p></article>
+    <article ><h1>When you need</h1>
+<ul>
+<li>to communicate between two remote systems in an asynchonous manner</li>
+<li>expect failures and need to monitor (supervise) work</li>
+<li>stateful components capable of updating state based off events from another component</li>
+<li>clustering with a master-slave configuration (supervisor-&gt; many workers)</li>
+</ul>
+<h1>When to consider others: TPL Dataflow or Async/Await</h1>
+<ul>
+<li>basically anything that is not going to be distributed</li>
+<li>need asyc functionality but not in a distributed manner</li>
+<li>need high degree of parallelism but not in a distributed manner</li>
+<li>need message passing functionality but not in a distributed manner</li>
+</ul></article>
  
 </slide>
 
