@@ -124,7 +124,6 @@ URL: https://code.google.com/p/io-2012-slides
 <li>Can be traced back to a specific paper by Leslie Lamport <a href="assets/time-clocks.pdf">paper</a></li>
 <li>Expanded to include error handling, scaling and consistency</li>
 <li>Common example from wikipedia for Reactive Programming, sort of fails to illustate idea completely</li>
-<li>So I tried to improve it a little bit...</li>
 </ul>
 <footer class="source">source: http://www.lamport.org/</footer></article>
  
@@ -191,9 +190,9 @@ console.log(c()); // event: update/set c = eval(6 + 7)
       <h3>Ordering Events</h3>
     </hgroup>
     <article ><p>How do we order events in a distributed system? </p>
-<p>M1 ---------------</p>
-<p>M2 ---------------</p>
-<p>M3 ---------------</p>
+<p>Machine 1 ---------A----------&gt;</p>
+<p>Machine 2 ---------B----------&gt;</p>
+<p>Machine 3 ---------C----------&gt;</p>
 <p>Events: A, B, C happen on three different systems.</p></article>
  
 </slide>
@@ -292,18 +291,16 @@ $.ajax({
 </blockquote>
 <h1>Non-blocking</h1>
 <blockquote>
-<p>The thread/process makes a call or request then continue's execution and possibly handles the return request at a later time.</p>
+<p>One thread/process does not interfere with the execution of another thread/process. </p>
 </blockquote>
-<pre class="prettyprint" data-lang="javascript">
-//Blocking
-function foo(){
-    var foobar = bar(); // blocks until the bar method returns the value of count
-    console.log(foobar);
-}
-function foo(){
-    var count = 0;
-    for(var x = 0; x < 100; x++){ count += 1; }
-    return count;
+<pre class="prettyprint" data-lang="C#">
+// Blocking
+public class Foo{
+    static void Main(string[] args){
+        Thread t = new Thread(new Bar());
+        t.Start();
+        t.Join(); //Current Thread blocks until Thread t finishes
+    }
 }
 </pre></article>
  
@@ -323,8 +320,19 @@ function foo(){
 <blockquote>
 <p>A thread or process is unblocked (doing other things) but still waiting on a resource to become available</p>
 </blockquote>
-<pre class="prettyprint" data-lang="c#">
-
+<pre class="prettyprint" data-lang="C#">
+// Livelock
+public class Foo{
+    private bool lock = true;
+    static void Main(string[] args){
+        Thread t = new Thread(new Bar());
+        t.Start();
+        while(lock){
+            if(!t.IsAlive()){ lock = false; }
+            else{ DoWork() } ;// Do work while we wait for t to finish
+        }
+    }
+}
 </pre></article>
  
 </slide>
@@ -415,7 +423,7 @@ class Program{
   
     <hgroup>
       <h2>Actor System</h2>
-      <h3>Hello World Example</h3>
+      <h3>GreetingInput Example</h3>
     </hgroup>
     <article ><pre class="prettyprint" data-lang="C#">
 // An Actor extends the ReceiveActor 
@@ -448,7 +456,7 @@ public class GreetingActor : TypedActor, IHandle &lt;Greet&gt; {
     </hgroup>
     <article ><ul>
 <li>Messages are sent asychronously</li>
-<li>Message ordering between two actors is guaranteed in order<ul>
+<li>Message ordering between two local actors is guaranteed in order<ul>
 <li>A1 sends M1 before M2 before M3 to A2</li>
 <li>A2 receives M1 before M2 before M3 from A1</li>
 </ul>
@@ -456,7 +464,11 @@ public class GreetingActor : TypedActor, IHandle &lt;Greet&gt; {
 <li>This is because Messages are stored in a queue (mailbox) - first-in first-out</li>
 <li>Guaranteed at most once delivery (no guarantee of delivery)</li>
 <li>Failure is possible, messages can be lost, mis-sent, or actors might die </li>
-</ul></article>
+<li><b>Message ordering between two remote actors is not guaranteed in order due to network latency</b></li>
+</ul>
+<blockquote>
+<p>"As a speculative view into the future it might be possible to support this ordering guarantee by re-implementing the remote transport layer based completely on actors."</p>
+</blockquote></article>
  
 </slide>
 
@@ -488,7 +500,7 @@ public class Start {
   
     <hgroup>
       <h2>Referencing Actors</h2>
-      <h3>Actor System Heirarchy</h3>
+      <h3>Actor System Hierarchy</h3>
     </hgroup>
     <article ><p><img alt="ActorPath" src="images/ActorPath.png" /></p></article>
  
@@ -498,7 +510,7 @@ public class Start {
   
     <hgroup>
       <h2>Referencing Actors</h2>
-      <h3>Actor Lookup Example</h3>
+      <h3>ActorLookup Example</h3>
     </hgroup>
     <article ><ul>
 <li>The system is composed of layers with referencing starting at:<ul>
@@ -518,9 +530,7 @@ Context.ActorSelection("/user/" + query.Name).Tell(new Hello());
 // Or we can use an IActorRef to send a message to an actor directly.
 IActorRef actorlookup = system.ActorOf<ActorLookup>("actorlookup");
 actorlookup.Tell(new Query(input));
-</pre>
-
-<footer class="source">source: http://getakka.net/</footer></article>
+</pre></article>
  
 </slide>
 
@@ -549,31 +559,11 @@ actorlookup.Tell(new Query(input));
 <li>
 <p>every actor has 5 stages of life </p>
 <ul>
-<li>
-<ol>
-<li>Starting </li>
-</ol>
-</li>
-<li>
-<ol>
-<li>Receiving</li>
-</ol>
-</li>
-<li>
-<ol>
-<li>Stopping</li>
-</ol>
-</li>
-<li>
-<ol>
-<li>Terminated</li>
-</ol>
-</li>
-<li>
-<ol>
-<li>Restarting</li>
-</ol>
-</li>
+<li>1) Starting </li>
+<li>2) Receiving</li>
+<li>3) Stopping</li>
+<li>4) Terminated</li>
+<li>5) Restarting</li>
 </ul>
 </li>
 <li>
@@ -605,8 +595,22 @@ actorlookup.Tell(new Query(input));
       <h2>Supervision and Monitoring</h2>
       <h3>DeathWatch Example</h3>
     </hgroup>
-    <article ><pre class="prettyprint" data-lang="C#">
-//
+    <article ><ul>
+<li>Monitoring behavior is defined through a SupervisorStrategy<ul>
+<li>OneForOneStrategy - deals with only the failing child</li>
+<li>AllForOneStrategy - deals with sibilings of failing child as well</li>
+</ul>
+</li>
+</ul>
+<pre class="prettyprint" data-lang="C#">
+// Easiest way is to setup a supervisor strategy for children
+protected override SupervisorStrategy SupervisorStrategy(){
+    return new OneForOneStrategy(x => { return Directive.Stop; });
+}
+// Actors can also signup to watch other actors
+Context.Watch(actor);
+// And can stop children if need be
+Context.Stop(child);
 </pre></article>
  
 </slide>
@@ -636,9 +640,7 @@ akka {
         }
     }
 }
-</pre>
-
-<footer class="source">source: http://getakka.net/docs/concepts/hocon</footer></article>
+</pre></article>
  
 </slide>
 
@@ -648,8 +650,26 @@ akka {
       <h2>Remoting</h2>
       <h3>Actor Lookup Distributed Example</h3>
     </hgroup>
-    <article ><pre class="prettyprint" data-lang="C#">
-//
+    <article ><ul>
+<li>Akka.Remote uses Helios<ul>
+<li>a middleware framework for .NET which provides access to transport protocols like TCP and UDP </li>
+</ul>
+</li>
+</ul>
+<pre class="prettyprint" data-lang="C#">
+// After configure the remote protocol, port, host and provider
+// we can call the actor remotely via the path
+system.ActorSelection("akka.tcp://MyServer@localhost:8080/user/");
+// Or we could configure this in the config and use a router to call it
+akka.actor.deployment {
+  /remoteactor {
+    router = round-robin-pool
+    nr-of-instances = 5
+    remote = ""akka.tcp://MyServer@localhost:8080""
+  }
+}
+var remote = system.ActorOf(Props.Create(() => new SomeActor(null, 123))
+    .WithRouter(FromConfig.Instance), "remoteactor");
 </pre></article>
  
 </slide>
@@ -658,9 +678,18 @@ akka {
   
     <hgroup>
       <h2>Clustering</h2>
-      <h3>Using RoundRobin</h3>
+      <h3>Different Types of Clustering</h3>
     </hgroup>
-    <article ></article>
+    <article ><ul>
+<li>Clustering uses parallelization to split work up across many actors/nodes</li>
+<li>Multiple different ways to create clusters <ul>
+<li>Routers and Actor Pools like RoundRobinPool, RandomPool or ConsistentHashingPool</li>
+<li>Akka.Cluster namespace - provides publish/subscribe behavior, leader election, and much more </li>
+<li>Other Custom implementations</li>
+</ul>
+</li>
+<li>Actor hierarchy and routers makes clustering much more managable</li>
+</ul></article>
  
 </slide>
 
@@ -670,7 +699,10 @@ akka {
       <h2>Clustering</h2>
       <h3>MapReduce Example</h3>
     </hgroup>
-    <article ></article>
+    <article ><pre class="prettyprint" data-lang="C#">
+//After configure the protocols
+
+</pre></article>
  
 </slide>
 
@@ -716,6 +748,18 @@ akka {
 <li>need asyc functionality but not in a distributed manner</li>
 <li>need high degree of parallelism but not in a distributed manner</li>
 <li>need message passing functionality but not in a distributed manner</li>
+</ul></article>
+ 
+</slide>
+
+<slide  >
+  
+    <hgroup>
+      <h2>Akka.NET and kCura</h2>
+      <h3>Thoughts on integrating Akka.NET</h3>
+    </hgroup>
+    <article ><ul>
+<li></li>
 </ul></article>
  
 </slide>

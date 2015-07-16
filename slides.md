@@ -67,7 +67,6 @@ class: big
 - Can be traced back to a specific paper by Leslie Lamport [paper](assets/time-clocks.pdf)
 - Expanded to include error handling, scaling and consistency
 - Common example from wikipedia for Reactive Programming, sort of fails to illustate idea completely
-- So I tried to improve it a little bit...
 
 <footer class="source">source: http://www.lamport.org/</footer>
 
@@ -126,11 +125,11 @@ subtitle: Ordering Events
 
 How do we order events in a distributed system? 
 
-M1 ---------------
+Machine 1 ---------A---------->
 
-M2 ---------------
+Machine 2 ---------B---------->
 
-M3 ---------------
+Machine 3 ---------C---------->
 
 Events: A, B, C happen on three different systems.
 
@@ -217,18 +216,16 @@ Blocking
 
 Non-blocking
 ===
-> The thread/process makes a call or request then continue's execution and possibly handles the return request at a later time.
+> One thread/process does not interfere with the execution of another thread/process. 
 
-<pre class="prettyprint" data-lang="javascript">
-//Blocking
-function foo(){
-    var foobar = bar(); // blocks until the bar method returns the value of count
-    console.log(foobar);
-}
-function foo(){
-    var count = 0;
-    for(var x = 0; x < 100; x++){ count += 1; }
-    return count;
+<pre class="prettyprint" data-lang="C#">
+// Blocking
+public class Foo{
+    static void Main(string[] args){
+        Thread t = new Thread(new Bar());
+        t.Start();
+        t.Join(); //Current Thread blocks until Thread t finishes
+    }
 }
 </pre>
 
@@ -246,9 +243,19 @@ Livelock
 ===
 > A thread or process is unblocked (doing other things) but still waiting on a resource to become available
 
-<pre class="prettyprint" data-lang="c#">
-
-
+<pre class="prettyprint" data-lang="C#">
+// Livelock
+public class Foo{
+    private bool lock = true;
+    static void Main(string[] args){
+        Thread t = new Thread(new Bar());
+        t.Start();
+        while(lock){
+            if(!t.IsAlive()){ lock = false; }
+            else{ DoWork() } ;// Do work while we wait for t to finish
+        }
+    }
+}
 </pre>
 
 ---
@@ -354,12 +361,15 @@ title: Messaging
 subtitle: Message Reliability in Akka
 
 - Messages are sent asychronously
-- Message ordering between two actors is guaranteed in order
+- Message ordering between two local actors is guaranteed in order
     - A1 sends M1 before M2 before M3 to A2
     - A2 receives M1 before M2 before M3 from A1
 - This is because Messages are stored in a queue (mailbox) - first-in first-out
 - Guaranteed at most once delivery (no guarantee of delivery)
 - Failure is possible, messages can be lost, mis-sent, or actors might die 
+- <b>Message ordering between two remote actors is not guaranteed in order due to network latency</b>
+
+> "As a speculative view into the future it might be possible to support this ordering guarantee by re-implementing the remote transport layer based completely on actors."
 
 ---
 
@@ -385,7 +395,7 @@ public class Start {
 ---
 
 title: Referencing Actors
-subtitle: Actor System Heirarchy
+subtitle: Actor System Hierarchy
 
 ![ActorPath](images/ActorPath.png)
 
@@ -409,8 +419,6 @@ IActorRef actorlookup = system.ActorOf<ActorLookup>("actorlookup");
 actorlookup.Tell(new Query(input));
 </pre>
 
-<footer class="source">source: http://getakka.net/</footer>
-
 ---
 
 title: Referencing Actors
@@ -427,11 +435,11 @@ title: Supervision and Monitoring
 subtitle: Stages of Life for an Actor
 
 - every actor has 5 stages of life 
-    - 1. Starting 
-    - 2. Receiving
-    - 3. Stopping
-    - 4. Terminated
-    - 5. Restarting
+    - 1) Starting 
+    - 2) Receiving
+    - 3) Stopping
+    - 4) Terminated
+    - 5) Restarting
 
 - every actor has hook methods to define code
     - preStart() - gets run before Receiving
@@ -451,13 +459,19 @@ subtitle: Lifecycle of an Actor
 title: Supervision and Monitoring
 subtitle: DeathWatch Example
 
+- Monitoring behavior is defined through a SupervisorStrategy
+    - OneForOneStrategy - deals with only the failing child
+    - AllForOneStrategy - deals with sibilings of failing child as well
+
 <pre class="prettyprint" data-lang="C#">
-//Parents have a specific way of handling failures of children
-
-
-
-//But any Actor can monitor any other actor
-
+// Easiest way is to setup a supervisor strategy for children
+protected override SupervisorStrategy SupervisorStrategy(){
+    return new OneForOneStrategy(x => { return Directive.Stop; });
+}
+// Actors can also signup to watch other actors
+Context.Watch(actor);
+// And can stop children if need be
+Context.Stop(child);
 </pre>
 
 ---
@@ -485,27 +499,62 @@ akka {
 }
 </pre>
 
-<footer class="source">source: http://getakka.net/docs/concepts/hocon</footer>
-
 ---
 
 title: Remoting
 subtitle: Actor Lookup Distributed Example
 
+- Akka.Remote uses Helios
+    - a middleware framework for .NET which provides access to transport protocols like TCP and UDP 
+
 <pre class="prettyprint" data-lang="C#">
-//
+// After configure the remote protocol, port, host and provider
+// we can call the actor remotely via the path
+system.ActorSelection("akka.tcp://MyServer@localhost:8080/user/");
+// Or we could configure this in the config and use a router to call it
+akka.actor.deployment {
+  /remoteactor {
+    router = round-robin-pool
+    nr-of-instances = 5
+    remote = ""akka.tcp://MyServer@localhost:8080""
+  }
+}
+var remote = system.ActorOf(Props.Create(() => new SomeActor(null, 123))
+    .WithRouter(FromConfig.Instance), "remoteactor");
 </pre>
 
 ---
 
 title: Clustering
-subtitle: Using RoundRobin
+subtitle: Different Types of Clustering
 
+- Clustering uses parallelization to split work up across many actors/nodes
+- Multiple different ways to create clusters 
+    - Routers and Actor Pools like RoundRobinPool, RandomPool or ConsistentHashingPool
+    - Akka.Cluster namespace - provides publish/subscribe behavior, leader election, and much more 
+    - Other Custom implementations
+- Actor hierarchy and routers makes clustering much more managable
+- Can integrate nodes with other tech like SignalR, SQL Server, ASP.NET MVC
 
 ---
 
 title: Clustering
 subtitle: MapReduce Example
+
+<pre class="prettyprint" data-lang="C#">
+// We can create pools of actors using the RoundRobinPool
+system.ActorOf(new RoundRobinPool(5, null, null, null, usePoolDispatcher: false).Props(Props.Create<ReduceActor>(5)));
+// Or we can create our own as a list using the hashed index as the router
+var reduceActors = new List<IActorRef>();
+for (int i = 0; i < 10; i++)
+{
+    reduceActors.Add(system.ActorOf(Props.Create<ReduceActor>(1)));
+}
+// Or we could use the Akka.Cluster.Cluster class
+Akka.Cluster.Cluster Cluster = Akka.Cluster.Cluster.Get(Context.System);
+// And subscribe to events
+Cluster.Subscribe(Self, ClusterEvent.InitialStateAsEvents, new []{ typeof(ClusterEvent.IMemberEvent), typeof(ClusterEvent.UnreachableMember) });
+</pre>
 
 ---
 
@@ -531,6 +580,7 @@ When you need
 - expect failures and need to monitor (supervise) work
 - stateful components capable of updating state based off events from another component
 - clustering with a master-slave configuration (supervisor-> many workers)
+- really anything that is going to use a lot of interprocess communication
 
 When to consider others: TPL Dataflow or Async/Await
 ===
@@ -538,6 +588,17 @@ When to consider others: TPL Dataflow or Async/Await
 - need asyc functionality but not in a distributed manner
 - need high degree of parallelism but not in a distributed manner
 - need message passing functionality but not in a distributed manner
+
+---
+
+title: Akka.NET and kCura
+subtitle: Thoughts on integrating Akka.NET
+
+- Communication between Applications hosted in Relativity
+- Agents as Actors, communicating with each other instead of being locked into a container
+- Communication between Relativity and Invariant or Worker Manager Server and Workers
+- Procuro as an Actor, send it messages about what scripts to run, version, etc.
+- And more...
 
 ---
 
