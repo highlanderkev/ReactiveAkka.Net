@@ -543,7 +543,8 @@ subtitle: MapReduce Example
 
 <pre class="prettyprint" data-lang="C#">
 // We can create pools of actors using the RoundRobinPool
-system.ActorOf(new RoundRobinPool(5, null, null, null, usePoolDispatcher: false).Props(Props.Create<ReduceActor>(5)));
+system.ActorOf(new RoundRobinPool(5, null, null, null, usePoolDispatcher: false)
+    .Props(Props.Create<ReduceActor>(5)));
 // Or we can create our own as a list using the hashed index as the router
 var reduceActors = new List<IActorRef>();
 for (int i = 0; i < 10; i++)
@@ -553,7 +554,8 @@ for (int i = 0; i < 10; i++)
 // Or we could use the Akka.Cluster.Cluster class
 Akka.Cluster.Cluster Cluster = Akka.Cluster.Cluster.Get(Context.System);
 // And subscribe to events
-Cluster.Subscribe(Self, ClusterEvent.InitialStateAsEvents, new []{ typeof(ClusterEvent.IMemberEvent), typeof(ClusterEvent.UnreachableMember) });
+Cluster.Subscribe(Self, ClusterEvent.InitialStateAsEvents, 
+    new []{ typeof(ClusterEvent.IMemberEvent), typeof(ClusterEvent.UnreachableMember) });
 </pre>
 
 ---
@@ -598,7 +600,7 @@ subtitle: Thoughts on integrating Akka.NET
 - Agents as Actors, communicating with each other instead of being locked into a container
 - Communication between Relativity and Invariant or Worker Manager Server and Workers
 - Procuro as an Actor, send it messages about what scripts to run, version, etc.
-- And more...
+- Clustering agents to run work in parallel (updates, installation, etc.)
 
 ---
 

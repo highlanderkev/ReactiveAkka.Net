@@ -689,6 +689,7 @@ var remote = system.ActorOf(Props.Create(() => new SomeActor(null, 123))
 </ul>
 </li>
 <li>Actor hierarchy and routers makes clustering much more managable</li>
+<li>Can integrate nodes with other tech like SignalR, SQL Server, ASP.NET MVC</li>
 </ul></article>
  
 </slide>
@@ -700,8 +701,20 @@ var remote = system.ActorOf(Props.Create(() => new SomeActor(null, 123))
       <h3>MapReduce Example</h3>
     </hgroup>
     <article ><pre class="prettyprint" data-lang="C#">
-//After configure the protocols
-
+// We can create pools of actors using the RoundRobinPool
+system.ActorOf(new RoundRobinPool(5, null, null, null, usePoolDispatcher: false)
+    .Props(Props.Create<ReduceActor>(5)));
+// Or we can create our own as a list using the hashed index as the router
+var reduceActors = new List<IActorRef>();
+for (int i = 0; i < 10; i++)
+{
+    reduceActors.Add(system.ActorOf(Props.Create<ReduceActor>(1)));
+}
+// Or we could use the Akka.Cluster.Cluster class
+Akka.Cluster.Cluster Cluster = Akka.Cluster.Cluster.Get(Context.System);
+// And subscribe to events
+Cluster.Subscribe(Self, ClusterEvent.InitialStateAsEvents, 
+    new []{ typeof(ClusterEvent.IMemberEvent), typeof(ClusterEvent.UnreachableMember) });
 </pre></article>
  
 </slide>
@@ -741,6 +754,7 @@ var remote = system.ActorOf(Props.Create(() => new SomeActor(null, 123))
 <li>expect failures and need to monitor (supervise) work</li>
 <li>stateful components capable of updating state based off events from another component</li>
 <li>clustering with a master-slave configuration (supervisor-&gt; many workers)</li>
+<li>really anything that is going to use a lot of interprocess communication</li>
 </ul>
 <h1>When to consider others: TPL Dataflow or Async/Await</h1>
 <ul>
@@ -759,7 +773,11 @@ var remote = system.ActorOf(Props.Create(() => new SomeActor(null, 123))
       <h3>Thoughts on integrating Akka.NET</h3>
     </hgroup>
     <article ><ul>
-<li></li>
+<li>Communication between Applications hosted in Relativity</li>
+<li>Agents as Actors, communicating with each other instead of being locked into a container</li>
+<li>Communication between Relativity and Invariant or Worker Manager Server and Workers</li>
+<li>Procuro as an Actor, send it messages about what scripts to run, version, etc.</li>
+<li>Clustering agents to run work in parallel (updates, installation, etc.)</li>
 </ul></article>
  
 </slide>
