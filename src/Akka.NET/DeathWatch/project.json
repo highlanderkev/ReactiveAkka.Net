@@ -1,0 +1,43 @@
+{
+	"version": "1.0.0-*",
+	"description": "DeathWatch",
+	"tags": [""],
+	"projectUrl": "",
+	"licenseUrl": "",
+	"compilationOptions": {
+		"warningsAsErrors": true
+	},
+	"dependencies": {
+		"Akka": "1.0.3"
+	},
+	"commands": {
+		"run": "run"
+	},
+	"frameworks": {
+		"aspnet50": {},
+		"aspnetcore50": {
+			"dependencies": {
+				"System.Console": "4.0.0-beta-*"
+			}
+		},
+		"dnx451": {},
+		"dnxcore50": {
+			"dependencies": {
+				"System.Collections": "4.0.0-beta-*",
+				"System.Collections.Concurrent": "4.0.0-beta-*",
+				"System.ComponentModel": "4.0.0-beta-*",
+				"System.Linq": "4.0.0-beta-*",
+				"System.Reflection": "4.0.0-beta-*",
+				"System.Runtime": "4.0.0-beta-*",
+				"System.Runtime.InteropServices": "4.0.0-beta-*",
+				"System.Threading": "4.0.0-beta-*",
+				"System.Threading.Tasks": "4.0.0-beta-*"
+			}
+		},
+		"Akka": {
+			"dependencies": {
+				"Newtonsoft.Json": "7.0.1"
+			}
+		}
+	}
+}
